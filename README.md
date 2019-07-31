@@ -1,2 +1,2 @@
 # kubedrainer
-Kubernetes Node Drainer
+Kubernetes Node Drainer helps to evict pods from nodes before shutdown.

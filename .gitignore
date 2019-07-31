@@ -1,0 +1,27 @@
+# The vendor
+vendor
+
+# Binaries for programs and plugins
+/kubedrainer
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go coverage results
+coverage.txt
+profile.out
+
+# Temporary Files and Dependencies
+tmp
+cross
+
+# IDE
+.idea
