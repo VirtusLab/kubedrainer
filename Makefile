@@ -1,6 +1,8 @@
 # Setup variables for the Makefile
 NAME := kubedrainer
 PKG := github.com/VirtusLab/$(NAME)
+REPO := virtuslab/$(NAME)
+DOCKER_REGISTRY := quay.io
 
 # Set POSIX sh for maximum interoperability
 SHELL := /bin/sh
@@ -31,9 +33,12 @@ ifneq ($(GITIGNOREDBUTTRACKEDCHANGES),)
     GITCOMMIT := $(GITCOMMIT)-dirty
 endif
 
+VERSION_TAG := $(VERSION)-$(GITCOMMIT)
+LATEST_TAG := latest
+
 CTIMEVAR=-X $(PKG)/version.GITCOMMIT=$(GITCOMMIT) -X $(PKG)/version.VERSION=$(VERSION)
-GO_LDFLAGS=-ldflags "-w $(CTIMEVAR)"
-GO_LDFLAGS_STATIC=-ldflags "-w $(CTIMEVAR) -extldflags -static"
+GO_FLAGS=-mod=vendor -ldflags "-w $(CTIMEVAR)"
+GO_FLAGS_STATIC=-mod=vendor -ldflags "-w $(CTIMEVAR) -extldflags -static"
 
 # List the GOOS and GOARCH to build
 GOOSARCHES = darwin/amd64 linux/arm linux/arm64 linux/amd64 windows/amd64
@@ -45,7 +50,7 @@ ARGS ?= $(EXTRA_ARGS)
 .DEFAULT_GOAL := help
 
 .PHONY: all
-all: clean dep verify build install ## Test, build, install
+all: clean mod verify build docker-build ## Ensure deps, test, verify, docker build
 	@echo "+ $@"
 
 .PHONY: init
@@ -69,14 +74,14 @@ build: $(NAME) ## Builds a dynamic executable or package
 
 $(NAME): $(wildcard *.go) $(wildcard */*.go) VERSION.txt
 	@echo "+ $@"
-	go build -tags "$(BUILDTAGS)" ${GO_LDFLAGS} -o $(NAME) $(BUILD_PATH)
+	go build -tags "$(BUILDTAGS)" ${GO_FLAGS} -o $(NAME) $(BUILD_PATH)
 
 .PHONY: static
 static: ## Builds a static executable
 	@echo "+ $@"
 	CGO_ENABLED=0 go build \
 				-tags "$(BUILDTAGS) static_build" \
-				${GO_LDFLAGS_STATIC} -o $(NAME) $(BUILD_PATH)
+				${GO_FLAGS_STATIC} -o $(NAME) $(BUILD_PATH)
 
 .PHONY: fmt
 fmt: ## Verifies all files have been `gofmt`ed
@@ -125,18 +130,18 @@ cover: ## Runs go test with coverage
 .PHONY: install
 install: ## Installs the executable
 	@echo "+ $@"
-	go install -tags "$(BUILDTAGS)" ${GO_LDFLAGS} $(BUILD_PATH)
+	go install -tags "$(BUILDTAGS)" ${GO_FLAGS} $(BUILD_PATH)
 
 .PHONY: run
 run: ## Run the executable, you can use EXTRA_ARGS
 	@echo "+ $@"
-	go run -tags "$(BUILDTAGS)" ${GO_LDFLAGS} $(BUILD_PATH)/main.go $(ARGS)
+	go run -tags "$(BUILDTAGS)" ${GO_FLAGS} $(BUILD_PATH)/main.go $(ARGS)
 
 define buildrelease
 GOOS=$(1) GOARCH=$(2) CGO_ENABLED=0 go build \
 	 -o $(BUILDDIR)/$(NAME)-$(1)-$(2) \
 	 -a -tags "$(BUILDTAGS) static_build netgo" \
-	 -installsuffix netgo ${GO_LDFLAGS_STATIC} $(BUILD_PATH);
+	 -installsuffix netgo ${GO_FLAGS_STATIC} $(BUILD_PATH);
 md5sum $(BUILDDIR)/$(NAME)-$(1)-$(2) > $(BUILDDIR)/$(NAME)-$(1)-$(2).md5;
 sha256sum $(BUILDDIR)/$(NAME)-$(1)-$(2) > $(BUILDDIR)/$(NAME)-$(1)-$(2).sha256;
 endef
@@ -149,11 +154,35 @@ release: $(wildcard *.go) $(wildcard */*.go) VERSION.txt ## Builds the cross-com
 .PHONY: clean
 clean: ## Cleanup any build binaries or packages
 	@echo "+ $@"
-	go mod tidy
 	$(RM) $(NAME) || echo "Couldn't delete, not there."
 	$(RM) test$(NAME) || echo "Couldn't delete, not there."
 	$(RM) -r $(BUILDDIR) || echo "Couldn't delete, not there."
 	$(RM) coverage.txt || echo "Couldn't delete, not there."
+
+.PHONY: docker-build
+docker-build: ## Build the container
+	@echo "+ $@"
+	docker build -t $(REPO):$(GITCOMMIT) .
+
+.PHONY: docker-login
+docker-login: ## Log in into the repository
+	@echo "+ $@"
+	@docker login -u="${DOCKER_USER}" -p="${DOCKER_PASS}" $(DOCKER_REGISTRY)
+
+.PHONY: docker-images
+docker-images: ## List all local containers
+	@echo "+ $@"
+	@docker images
+
+.PHONY: docker-push
+docker-push: ## Push the container
+	@echo "+ $@"
+	@docker tag $(REPO):$(GITCOMMIT) $(DOCKER_REGISTRY)/$(REPO):$(VERSION)
+	@docker tag $(REPO):$(GITCOMMIT) $(DOCKER_REGISTRY)/$(REPO):$(VERSION_TAG)
+	@docker tag $(REPO):$(GITCOMMIT) $(DOCKER_REGISTRY)/$(REPO):$(LATEST_TAG)
+	@docker push $(DOCKER_REGISTRY)/$(REPO):$(VERSION)
+	@docker push $(DOCKER_REGISTRY)/$(REPO):$(VERSION_TAG)
+	@docker push $(DOCKER_REGISTRY)/$(REPO):$(LATEST_TAG)
 
 .PHONY: bump-version
 BUMP := patch
@@ -176,7 +205,7 @@ tag: ## Create a new git tag to prepare to build a release
 	git push origin $(VERSION)
 
 .PHONY: status
-status: ## Shows git and dep status
+status: ## Shows general status
 	@echo "+ $@"
 	@echo "Commit: $(GITCOMMIT), VERSION: $(VERSION)"
 	@echo
@@ -190,9 +219,6 @@ ifneq ($(GITIGNOREDBUTTRACKEDCHANGES),)
 	@git ls-files -i --exclude-standard
 	@echo
 endif
-	@echo "Dependencies:"
-	@dep status
-	@echo
 
 .PHONY: checkmake
 checkmake: ## Check this Makefile
