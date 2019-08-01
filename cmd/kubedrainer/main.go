@@ -4,8 +4,8 @@ import (
 	"flag"
 	"time"
 
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/drainer"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/trigger/aws/autoscaling"
+	"github.com/VirtusLab/kubedrainer/pkg/drainer"
+	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws/autoscaling"
 
 	"github.com/golang/glog"
 	"github.com/mitchellh/go-homedir"

@@ -3,8 +3,9 @@ package autoscaling
 import (
 	"time"
 
+	"github.com/VirtusLab/kubedrainer/pkg/drainer"
+
 	"github.com/VirtusLab/go-extended/pkg/errors"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/drainer"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"

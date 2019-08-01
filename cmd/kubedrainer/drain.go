@@ -1,9 +1,10 @@
 package main
 
 import (
+	"github.com/VirtusLab/kubedrainer/pkg/drainer"
+	"github.com/VirtusLab/kubedrainer/pkg/kubernetes"
+
 	"github.com/VirtusLab/go-extended/pkg/errors"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/drainer"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/kubernetes"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 )

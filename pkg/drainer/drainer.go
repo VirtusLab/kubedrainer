@@ -4,9 +4,10 @@ package drainer
 
 import (
 	"fmt"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/kubernetes/node"
 	"math"
 	"time"
+
+	"github.com/VirtusLab/kubedrainer/pkg/kubernetes/node"
 
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"

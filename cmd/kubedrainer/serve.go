@@ -1,14 +1,15 @@
 package main
 
 import (
+	"github.com/VirtusLab/kubedrainer/pkg/drainer"
+	"github.com/VirtusLab/kubedrainer/pkg/kubernetes"
+	"github.com/VirtusLab/kubedrainer/pkg/kubernetes/node"
+	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws"
+	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws/autoscaling"
+	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws/metadata"
+
 	"github.com/VirtusLab/go-extended/pkg/errors"
 	"github.com/VirtusLab/go-extended/pkg/matcher"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/drainer"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/kubernetes"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/kubernetes/node"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/trigger/aws"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/trigger/aws/autoscaling"
-	"github.com/VirtusLab/kubedrainer/cmd/pkg/trigger/aws/metadata"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/golang/glog"
