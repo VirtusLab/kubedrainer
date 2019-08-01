@@ -1,0 +1,47 @@
+language: go
+sudo: false
+
+go:
+- 1.12.x
+
+matrix:
+  fast_finish: true
+
+before_install:
+- make init mod
+
+script:
+- make status verify
+
+before_deploy:
+- make status release
+- echo "Deploying to GitHub releases ..."
+
+deploy:
+  provider: releases
+  api_key:
+    secure: BQNvmALrlsflpkEQP2asPd6mVJ4xIskFtTfFdaNcCz7+zv8K+rAAla69pJ8NFSOaQPRdA9fInUsnnyukkOF7JPmYJk3vxBHegeBvX1d2pRYLh9MshpyAiCq/mEOEIk2gQr5FnlEz7UhMuFeTOfvv1tCWf6yTsYjNfv+PquxVpiHUG/mFxtmdeLawwiJtGSjcBHYTHb895u2hpBrekKNQTfty+L0cRDyxX7ovYX402Bc9faiEyUk/1F55J5Jap30C4X/gSFxsC+NvhXBLcWyuh4Y/zLJvd4cAmw7pi26zDb/QTUmPdyIhJ+ysml9M/O317OXW3ypNxdsDAvzvjm+w5KN0AI+5HnTNI4YoS4N4spQNa0PgDLH7zc/3/iOWtSNA+x6wI9Dri/KMiI6f62VKFSicYSa9c6vTQscN62DPh+YSRgyxoBSkHPuW8j5uOU6TYTLObPcc7rLFDGxk7opRODbn4zUPhxqJMk1MhRUKw9jciPMYPcWne4R0Ua8w/HmdSWfhcPDfz++qz29sEiVS+gLIqI7SDyc6mH062+Q0+OQJ6ej8jJM/dl5hCHZIWmknGQ7YxxI5A/KPSpfmt9SrWhRVfG1VULnrotK2PsU/uPkdKlCWskuwkBQ6Ib2qj9dEB9CXwyKkwjLqRd/OYsnD9qd6hQU5XMrhsuNw3jjqtXY=
+  skip_cleanup: true
+  on:
+    repo: VirtusLab/render
+    tags: true
+  file:
+  - cross/render-darwin-amd64
+  - cross/render-darwin-amd64.md5
+  - cross/render-darwin-amd64.sha256
+  - cross/render-linux-arm
+  - cross/render-linux-arm.md5
+  - cross/render-linux-arm.sha256
+  - cross/render-linux-arm64
+  - cross/render-linux-arm64.md5
+  - cross/render-linux-arm64.sha256
+  - cross/render-linux-amd64
+  - cross/render-linux-amd64.md5
+  - cross/render-linux-amd64.sha256
+  - cross/render-windows-amd64
+  - cross/render-windows-amd64.md5
+  - cross/render-windows-amd64.sha256
+
+cache:
+  directories:
+    - vendor
