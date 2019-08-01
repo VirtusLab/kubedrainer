@@ -4,6 +4,7 @@ import (
 	"flag"
 	"time"
 
+	"github.com/VirtusLab/kubedrainer/internal/version"
 	"github.com/VirtusLab/kubedrainer/pkg/drainer"
 	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws/autoscaling"
 
@@ -19,9 +20,10 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "kubedrainer",
-	Short: "Kubernetes Node Drainer",
-	Long:  `Kubernetes Node Drainer helps to evicts pods form node before shutdown`,
+	Use:     "kubedrainer",
+	Short:   "Kubernetes Node Drainer",
+	Long:    `Kubernetes Node Drainer helps to evicts pods form node before shutdown`,
+	Version: version.Long(),
 }
 
 var kubeConfigFlags *genericclioptions.ConfigFlags
