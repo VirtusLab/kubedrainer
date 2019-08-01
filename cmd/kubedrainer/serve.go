@@ -20,9 +20,10 @@ import (
 // serveCmd represents the serve command
 func serveCmd(drainerOptions *drainer.Options, asgOptions *autoscaling.Options) *cobra.Command {
 	return &cobra.Command{
-		Use:   "serve",
+		Use:   "serve [nodeName]",
 		Short: "Run node drainer as server",
 		Long:  `Run node drainer as server with the provided configuration`,
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("")
@@ -105,7 +106,7 @@ func serveCmd(drainerOptions *drainer.Options, asgOptions *autoscaling.Options) 
 
 			t := aws.HookHandler{
 				Drainer:     drainer.New(kubernetesClient, drainerOptions),
-				AutoScaling: autoscaling.NewAutoScaling(awsSession, asgOptions),
+				AutoScaling: autoscaling.New(awsSession, asgOptions),
 			}
 
 			t.Loop(nodeName)
@@ -115,6 +116,7 @@ func serveCmd(drainerOptions *drainer.Options, asgOptions *autoscaling.Options) 
 	}
 }
 
+// GetNodeInformation gets region and instance ID for a given node from Kubernetes API
 func GetNodeInformation(nodeName string, kubernetesClient k8s.Interface) (string, string, error) {
 	var region string
 	var instanceID string
@@ -122,7 +124,7 @@ func GetNodeInformation(nodeName string, kubernetesClient k8s.Interface) (string
 	n := &node.Node{
 		Client: kubernetesClient,
 	}
-	providerName, providerSpecificNodeID, err := n.GetProviderId(nodeName)
+	providerName, providerSpecificNodeID, err := n.GetProviderID(nodeName)
 	if err != nil {
 		return "", "", err
 	}
@@ -151,6 +153,7 @@ func GetNodeInformation(nodeName string, kubernetesClient k8s.Interface) (string
 	return region, instanceID, nil
 }
 
+// GetMetadata gets region and instance ID from EC2 instance metadata
 func GetMetadata(awsSession *session.Session) (string, string, error) {
 	var region string
 	var instanceID string

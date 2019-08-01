@@ -3,8 +3,6 @@ package autoscaling
 import (
 	"time"
 
-	"github.com/VirtusLab/kubedrainer/pkg/drainer"
-
 	"github.com/VirtusLab/go-extended/pkg/errors"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -26,6 +24,7 @@ type AutoScaling struct {
 	Options     *Options
 }
 
+// Options for AutoScaling
 type Options struct {
 	InstanceID     string
 	Region         string
@@ -35,12 +34,8 @@ type Options struct {
 	ForceLoopBreak bool
 }
 
-type HookHandler struct {
-	AutoScaling *AutoScaling
-	Drainer     drainer.Drainer
-}
-
-func NewAutoScaling(session *session.Session, options *Options) *AutoScaling {
+// New creates a new AutoScaling
+func New(session *session.Session, options *Options) *AutoScaling {
 	return &AutoScaling{
 		AutoScaling: autoscaling.New(session, aws.NewConfig().WithRegion(options.Region)),
 		Options:     options,

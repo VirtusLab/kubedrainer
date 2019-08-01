@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"reflect"
 	"time"
 
 	"github.com/VirtusLab/kubedrainer/internal/version"
@@ -70,6 +71,7 @@ func main() {
 	// Adds all child commands to the root command and sets flags appropriately.
 	// This is called by main.main(). It only needs to happen once to the rootCmd.
 	if err := rootCmd.Execute(); err != nil {
+		glog.V(3).Infof("Error type: %s", reflect.TypeOf(err))
 		glog.Exitln(err)
 	}
 }

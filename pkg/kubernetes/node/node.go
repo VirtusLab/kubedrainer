@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Node represents a Kubernetes node API
 type Node struct {
 	Client kubernetes.Interface
 }
@@ -22,15 +23,13 @@ func (n *Node) GetNode(nodeName string) (v1.Node, error) {
 		return v1.Node{}, errors.Wrap(err)
 	}
 	if len(nodes.Items) == 0 {
-		return v1.Node{}, errors.New("No nodes found.")
-	} else {
-		for _, n := range nodes.Items {
-			if n.Name == nodeName {
-				glog.V(1).Infof("Found node: '%s'", nodeName)
-				return n, nil
-			}
+		return v1.Node{}, errors.New("no nodes found")
+	}
+	for _, n := range nodes.Items {
+		if n.Name == nodeName {
+			glog.V(1).Infof("Found node: '%s'", nodeName)
+			return n, nil
 		}
-		// fall through
 	}
 
 	// inform about available nodes
@@ -38,10 +37,11 @@ func (n *Node) GetNode(nodeName string) (v1.Node, error) {
 	for _, n := range nodes.Items {
 		nodeNames = append(nodeNames, n.Name)
 	}
-	return v1.Node{}, errors.Errorf("Node '%s' not found, got: '%s'", nodeName, strings.Join(nodeNames, ", "))
+	return v1.Node{}, errors.Errorf("node '%s' not found, got: '%s'", nodeName, strings.Join(nodeNames, ", "))
 }
 
-func (n *Node) GetProviderId(nodeName string) (string, string, error) {
+// GetProviderID returns a cloud provider specific ID for the given Kubernetes node
+func (n *Node) GetProviderID(nodeName string) (string, string, error) {
 	node, err := n.Client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
 	if err != nil {
 		return "", "", errors.Wrap(err)

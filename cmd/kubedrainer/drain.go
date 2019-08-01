@@ -11,14 +11,11 @@ import (
 
 func drainCmd(options *drainer.Options) *cobra.Command {
 	return &cobra.Command{
-		Use:   "drain",
+		Use:   "drain [nodeName]",
 		Short: "Drain a node",
 		Long:  `Drain a node by cordoning and pod eviction`,
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return errors.New("")
-			}
-
 			nodeName := args[0]
 			glog.V(3).Infof("nodeName(args[0])=%v", nodeName)
 

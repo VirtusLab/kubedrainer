@@ -9,11 +9,13 @@ import (
 	"github.com/golang/glog"
 )
 
+// HookHandler implements a drainer trigger for AWS ASG instance lifecycle hook
 type HookHandler struct {
 	AutoScaling *autoscaling.AutoScaling
 	Drainer     drainer.Drainer
 }
 
+// Loop starts an infinite handler loop
 func (h *HookHandler) Loop(nodeName string) {
 	glog.Infof("Running node drainer on node '%s' on instance '%s' in region '%s' and profile '%s'",
 		nodeName, h.AutoScaling.Options.InstanceID, h.AutoScaling.Options.Region, h.AutoScaling.Options.Profile)

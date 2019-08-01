@@ -22,10 +22,12 @@ import (
 	"k8s.io/kubectl/pkg/drain"
 )
 
+// Drainer represents the draining action
 type Drainer interface {
 	Drain(nodeName string) error
 }
 
+// Options for the Drainer
 type Options struct {
 	Force               bool
 	DryRun              bool
@@ -53,6 +55,7 @@ func (OutWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+// New creates a new Drainer with the given Kubernetes client and options
 func New(client kubernetes.Interface, options *Options) Drainer {
 	out := &OutWriter{}
 	errOut := &ErrWriter{}
@@ -159,9 +162,8 @@ func (o *drainCmdOptions) deleteOrEvictPods(pods []corev1.Pod) error {
 
 	if len(policyGroupVersion) > 0 {
 		return o.evictPods(pods, policyGroupVersion, getPodFn)
-	} else {
-		return o.deletePods(pods, getPodFn)
 	}
+	return o.deletePods(pods, getPodFn)
 }
 
 func (o *drainCmdOptions) evictPods(pods []corev1.Pod, policyGroupVersion string, getPodFn func(namespace, name string) (*corev1.Pod, error)) error {

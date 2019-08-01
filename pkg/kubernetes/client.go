@@ -7,6 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Client returns a Kubernetes API client using kubeconfig
 func Client(kubeConfigFlags *genericclioptions.ConfigFlags) (*kubernetes.Clientset, error) {
 	clientConfig, err := kubeConfigFlags.ToRESTConfig()
 	if err != nil {
