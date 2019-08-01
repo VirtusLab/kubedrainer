@@ -21,7 +21,6 @@ matrix:
 before_install:
   # https://github.com/golang/go/issues/32502
   - GO111MODULE=off make init
-  - make mod
 
 script:
   - make status verify
