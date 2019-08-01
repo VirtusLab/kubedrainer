@@ -18,13 +18,15 @@ matrix:
   fast_finish: true
 
 before_install:
-  - make init mod
+  - make init
+  - GO111MODULE=on make mod
 
 script:
-  - make status verify
+  - GO111MODULE=on make status verify
 
 before_deploy:
-  - make status release docker-build docker-images
+  - GO111MODULE=on make status release docker-build docker-images
+  - make docker-build docker-images
   - echo "Deploying to GitHub and Quay ..."
 
 deploy:
