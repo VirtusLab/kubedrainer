@@ -56,11 +56,12 @@ all: clean mod verify build docker-build ## Ensure deps, test, verify, docker bu
 .PHONY: init
 init: ## Initializes this Makefile dependencies: dep, golint, staticcheck, checkmake
 	@echo "+ $@"
-	go get -u golang.org/x/lint/golint
-	go get -u honnef.co/go/tools/cmd/staticcheck
-	go get -u golang.org/x/tools/cmd/goimports
-	go get -u github.com/mrtazz/checkmake
-	go get -u github.com/jessfraz/junk/sembump
+	@# https://github.com/golang/go/issues/32502
+	GO111MODULE=off go get -u golang.org/x/lint/golint
+	GO111MODULE=off go get -u honnef.co/go/tools/cmd/staticcheck
+	GO111MODULE=off go get -u golang.org/x/tools/cmd/goimports
+	GO111MODULE=off go get -u github.com/mrtazz/checkmake
+	GO111MODULE=off go get -u github.com/jessfraz/junk/sembump
 
 .PHONY: mod
 mod: ## Populates the vendor directory with dependencies
