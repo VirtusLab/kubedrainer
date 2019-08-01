@@ -10,6 +10,7 @@ type Metadata struct {
 	Metadata EC2MetadataAPI
 }
 
+// New creates a new Metadata
 func New(session client.ConfigProvider) *Metadata {
 	return &Metadata{
 		ec2metadata.New(session),

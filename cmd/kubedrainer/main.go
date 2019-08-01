@@ -97,7 +97,7 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		glog.Infof("Using config file:", viper.ConfigFileUsed())
+		glog.Infof("Using config file: '%s'", viper.ConfigFileUsed())
 	}
 }
 
