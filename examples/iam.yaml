@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  IAMRoleKubedrainer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kubedrainer
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            AWS:
+            - <Kubernetes Node IAM Role>
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Sid: AllowAutoscalingLifehookManagement
+            Effect: "Allow"
+            Action:
+            - autoscaling:CompleteLifecycleAction
+            - autoscaling:DescribeAutoScalingGroups
+            - autoscaling:DescribeAutoScalingInstances
+            - autoscaling:DescribeLifecycleHooks
+            Resource: "*"

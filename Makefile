@@ -195,7 +195,8 @@ bump-version: ## Bump the version in the version file. Set BUMP to [ patch | maj
 	@echo "Updating version from $(VERSION) to $(NEW_VERSION) in README.md"
 	sed -i s/$(VERSION)/$(NEW_VERSION)/g README.md
 	sed -i s/$(VERSION)/$(NEW_VERSION)/g internal/version/version.go
-	git add VERSION.txt README.md internal/version/version.go
+	sed -i s/$(VERSION)/$(NEW_VERSION)/g examples/kubernetes.yaml
+	git add VERSION.txt README.md internal/version/version.go examples/kubernetes.yaml
 	git commit -vseam "Bump version to $(NEW_VERSION)"
 	@echo "Run make tag to create and push the tag for new version $(NEW_VERSION)"
 

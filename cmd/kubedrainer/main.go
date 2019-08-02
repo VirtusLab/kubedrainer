@@ -17,24 +17,27 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+var appName = "kubedrainer"
 var cfgFile string
-
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:     "kubedrainer",
-	Short:   "Kubernetes Node Drainer",
-	Long:    `Kubernetes Node Drainer helps to evicts pods form node before shutdown`,
-	Version: version.Long(),
-}
 
 var kubeConfigFlags *genericclioptions.ConfigFlags
 var drainerOptions = &drainer.Options{
-	GracePeriodSeconds: -1,
-	Timeout:            60 * time.Second,
+	GracePeriodSeconds:  -1,
+	Timeout:             60 * time.Second,
+	DeleteLocalData:     true,
+	IgnoreAllDaemonSets: true,
 }
 var awsOptions = &autoscaling.Options{
 	LoopSleepTime: 10 * time.Second,
 	ShutdownSleep: 6 * time.Minute,
+}
+
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
+	Use:     appName,
+	Short:   "Kubernetes Node Drainer",
+	Long:    `Kubernetes Node Drainer helps to evicts pods form node before shutdown`,
+	Version: version.Long(),
 }
 
 func init() {
@@ -66,18 +69,20 @@ func init() {
 }
 
 func main() {
+	// make sure we always get logs
 	defer glog.Flush()
 
 	// Adds all child commands to the root command and sets flags appropriately.
 	// This is called by main.main(). It only needs to happen once to the rootCmd.
 	if err := rootCmd.Execute(); err != nil {
-		glog.V(3).Infof("Error type: %s", reflect.TypeOf(err))
+		glog.V(1).Infof("Stack trace (%s): %+v", reflect.TypeOf(err), err)
 		glog.Exitln(err)
 	}
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	glog.V(3).Info("initConfig")
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -90,13 +95,20 @@ func initConfig() {
 
 		// Search config in home directory with name ".kubedrainer" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".kubedrainer")
+		viper.SetConfigName("." + appName)
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.SetEnvPrefix(appName)
+	viper.AutomaticEnv() // read environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			glog.V(1).Info("No config file found.")
+		} else {
+			glog.Errorf("Config file found, but cannot be read.")
+		}
+	} else {
 		glog.Infof("Using config file: '%s'", viper.ConfigFileUsed())
 	}
 }
@@ -123,6 +135,10 @@ func addDrainerFlags(flags *pflag.FlagSet, options *drainer.Options) {
 	flags.DurationVar(&options.Timeout, "timeout", options.Timeout, "The length of time to wait before giving up, zero means infinite")
 	flags.StringVarP(&options.Selector, "selector", "l", options.Selector, "Selector (label query) to filter on")
 	flags.StringVarP(&options.PodSelector, "pod-selector", "", options.PodSelector, "Label selector to filter pods on the node")
+
+	flags.String("node", "", "Kubernetes node name to drain")
+	_ = viper.BindPFlag("node", flags.Lookup("node"))
+	_ = viper.BindEnv("node")
 }
 
 func addKubeConfigFlags(flags *pflag.FlagSet) {

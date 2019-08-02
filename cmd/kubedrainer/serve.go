@@ -14,25 +14,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	k8s "k8s.io/client-go/kubernetes"
 )
 
 // serveCmd represents the serve command
 func serveCmd(drainerOptions *drainer.Options, asgOptions *autoscaling.Options) *cobra.Command {
 	return &cobra.Command{
-		Use:   "serve [nodeName]",
+		Use:   "serve",
 		Short: "Run node drainer as server",
 		Long:  `Run node drainer as server with the provided configuration`,
-		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return errors.New("")
-			}
-
 			glog.Info("Running as server")
+			glog.V(1).Infof("All keys: %s", viper.AllKeys())
+			glog.V(1).Infof("All settings: %s", viper.AllSettings())
 
-			nodeName := args[0]
-			glog.V(1).Infof("NodeName (args[0]): '%s'", nodeName)
+			nodeName := viper.GetString("node")
+			glog.V(1).Infof("nodeName: '%s'", nodeName)
 			glog.V(1).Infof("Instance ID: '%s'", asgOptions.InstanceID)
 			glog.V(1).Infof("Region: '%s'", asgOptions.Region)
 

@@ -7,17 +7,17 @@ import (
 	"github.com/VirtusLab/go-extended/pkg/errors"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func drainCmd(options *drainer.Options) *cobra.Command {
 	return &cobra.Command{
-		Use:   "drain [nodeName]",
+		Use:   "drain",
 		Short: "Drain a node",
 		Long:  `Drain a node by cordoning and pod eviction`,
-		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			nodeName := args[0]
-			glog.V(3).Infof("nodeName(args[0])=%v", nodeName)
+			nodeName := viper.GetString("node")
+			glog.V(1).Infof("nodeName: '%s'", nodeName)
 
 			client, err := kubernetes.Client(kubeConfigFlags)
 			if err != nil {
