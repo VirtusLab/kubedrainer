@@ -18,6 +18,10 @@ type Node struct {
 
 // GetNode returns error if the given node cannot be found
 func (n *Node) GetNode(nodeName string) (v1.Node, error) {
+	if len(nodeName) == 0 {
+		return v1.Node{}, errors.New("node name cannot be empty")
+	}
+
 	nodes, err := n.Client.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		return v1.Node{}, errors.Wrap(err)

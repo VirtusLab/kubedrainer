@@ -7,8 +7,10 @@ import (
 	"math"
 	"time"
 
+	"github.com/VirtusLab/kubedrainer/internal/stringer"
 	"github.com/VirtusLab/kubedrainer/pkg/kubernetes/node"
 
+	"github.com/VirtusLab/go-extended/pkg/errors"
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,6 +31,7 @@ type Drainer interface {
 
 // Options for the Drainer
 type Options struct {
+	Node                string
 	Force               bool
 	DryRun              bool
 	GracePeriodSeconds  int
@@ -37,6 +40,10 @@ type Options struct {
 	DeleteLocalData     bool
 	Selector            string
 	PodSelector         string
+}
+
+func (o *Options) String() string {
+	return stringer.Stringify(o)
 }
 
 // ErrWriter allows for Glog usage inside kubectl drainer implementation
@@ -83,6 +90,10 @@ func New(client kubernetes.Interface, options *Options) Drainer {
 
 func (o *drainCmdOptions) Drain(nodeName string) error {
 	glog.Infof("Draining node: '%s'", nodeName)
+	if len(nodeName) == 0 {
+		return errors.New("node name cannot be empty")
+	}
+
 	n := node.Node{
 		Client: o.drainer.Client,
 	}

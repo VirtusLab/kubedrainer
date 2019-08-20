@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+
+	"github.com/VirtusLab/kubedrainer/internal/settings"
 	"github.com/VirtusLab/kubedrainer/pkg/drainer"
 	"github.com/VirtusLab/kubedrainer/pkg/kubernetes"
 	"github.com/VirtusLab/kubedrainer/pkg/kubernetes/node"
@@ -14,104 +17,171 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	k8s "k8s.io/client-go/kubernetes"
 )
 
+type ServeOptions struct {
+	Kubernetes *kubernetes.Options
+	Drainer    *drainer.Options
+	AWS        *autoscaling.Options
+}
+
+type ServeFlags struct {
+	Kubernetes *pflag.FlagSet
+	Drainer    *pflag.FlagSet
+	AWS        *pflag.FlagSet
+}
+
 // serveCmd represents the serve command
-func serveCmd(drainerOptions *drainer.Options, asgOptions *autoscaling.Options) *cobra.Command {
-	return &cobra.Command{
+func serveCmd() *cobra.Command {
+	options := &ServeOptions{
+		Kubernetes: genericclioptions.NewConfigFlags(true),
+		Drainer: &drainer.Options{
+			GracePeriodSeconds:  -1,
+			Timeout:             60 * time.Second,
+			DeleteLocalData:     true,
+			IgnoreAllDaemonSets: true,
+		},
+		AWS: &autoscaling.Options{
+			LoopSleepTime: 10 * time.Second,
+			ShutdownSleep: 6 * time.Minute,
+		},
+	}
+
+	flags := &ServeFlags{
+		Kubernetes: kubernetesFlags(options.Kubernetes),
+		Drainer:    drainerFlags(options.Drainer),
+		AWS:        autoscalingFlags(options.AWS),
+	}
+
+	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Run node drainer as server",
 		Long:  `Run node drainer as server with the provided configuration`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			glog.Info("Running as server")
-			glog.V(1).Infof("All keys: %s", viper.AllKeys())
-			glog.V(1).Infof("All settings: %s", viper.AllSettings())
 
-			nodeName := viper.GetString("node")
-			glog.V(1).Infof("nodeName: '%s'", nodeName)
-			glog.V(1).Infof("Instance ID: '%s'", asgOptions.InstanceID)
-			glog.V(1).Infof("Region: '%s'", asgOptions.Region)
+			if err := options.Parse(cmd); err != nil {
+				return err
+			}
 
-			kubernetesClient, err := kubernetes.Client(kubeConfigFlags)
+			kubernetesClient, err := kubernetes.New(options.Kubernetes)
 			if err != nil {
 				return err
 			}
 
-			awsSession, _, err := aws.SessionConfig(asgOptions.Region, asgOptions.Profile)
+			awsSession, _, err := aws.SessionConfig(options.AWS.Region, options.AWS.Profile)
 			if err != nil {
 				return err
 			}
 
 			// get information from Kubernetes API if necessary
-			if len(asgOptions.Region) == 0 && len(asgOptions.InstanceID) == 0 {
+			if len(options.AWS.Region) == 0 && len(options.AWS.InstanceID) == 0 {
 				glog.V(1).Info("Getting node information")
-				region, instanceID, err := GetNodeInformation(nodeName, kubernetesClient)
+				region, instanceID, err := GetNodeInformation(options.Drainer.Node, kubernetesClient)
 				if err != nil {
 					return err
 				}
-				if len(asgOptions.InstanceID) == 0 {
-					asgOptions.InstanceID = instanceID
+				if len(options.AWS.InstanceID) == 0 {
+					options.AWS.InstanceID = instanceID
 				} else {
 					glog.V(1).Infof("Ignoring instance ID from node info '%s', using current: '%s'",
-						instanceID, asgOptions.InstanceID)
+						instanceID, options.AWS.InstanceID)
 				}
-				if len(asgOptions.Region) == 0 {
-					asgOptions.Region = region
+				if len(options.AWS.Region) == 0 {
+					options.AWS.Region = region
 				} else {
 					glog.V(1).Infof("Ignoring region from node info '%s', using current: '%s'",
-						instanceID, asgOptions.Region)
+						instanceID, options.AWS.Region)
 				}
 			}
 
 			// get information from AWS API if necessary
-			if len(asgOptions.Region) == 0 && len(asgOptions.InstanceID) == 0 {
+			if len(options.AWS.Region) == 0 && len(options.AWS.InstanceID) == 0 {
 				glog.V(1).Info("Getting EC2 metadata")
 				region, instanceID, err := GetMetadata(awsSession)
 				if err != nil {
 					return err
 				}
-				if len(asgOptions.InstanceID) == 0 {
-					asgOptions.InstanceID = instanceID
+				if len(options.AWS.InstanceID) == 0 {
+					options.AWS.InstanceID = instanceID
 				} else {
 					glog.V(1).Infof("Ignoring instance ID from metadata '%s', using current: '%s'",
-						instanceID, asgOptions.InstanceID)
+						instanceID, options.AWS.InstanceID)
 				}
-				if len(asgOptions.Region) == 0 {
-					asgOptions.Region = region
+				if len(options.AWS.Region) == 0 {
+					options.AWS.Region = region
 				} else {
 					glog.V(1).Infof("Ignoring region from metadata '%s', using current: '%s'",
-						instanceID, asgOptions.Region)
+						instanceID, options.AWS.Region)
 				}
 			}
 
-			if len(asgOptions.Profile) == 0 {
+			if len(options.AWS.Profile) == 0 {
 				glog.V(1).Infof("Using default AWS API credentials profile")
-				asgOptions.Profile = aws.DefaultProfile
+				options.AWS.Profile = aws.DefaultProfile
 			}
 
 			// check preconditions
-			if len(asgOptions.InstanceID) == 0 {
+			if len(options.AWS.InstanceID) == 0 {
 				return errors.New("No instance ID from flags, configuration, or metadata")
 			}
-			if len(asgOptions.Region) == 0 {
+			if len(options.AWS.Region) == 0 {
 				return errors.New("No region from flags, configuration, or metadata")
 			}
-			if len(asgOptions.Profile) == 0 {
+			if len(options.AWS.Profile) == 0 {
 				return errors.New("No profile provided")
+			}
+			if len(options.Drainer.Node) == 0 {
+				return errors.New("No node name provided")
 			}
 
 			t := aws.HookHandler{
-				Drainer:     drainer.New(kubernetesClient, drainerOptions),
-				AutoScaling: autoscaling.New(awsSession, asgOptions),
+				Drainer:     drainer.New(kubernetesClient, options.Drainer),
+				AutoScaling: autoscaling.New(awsSession, options.AWS),
 			}
 
-			t.Loop(nodeName)
+			t.Loop(options.Drainer.Node)
 
 			return errors.Wrap(err)
 		},
 	}
+
+	flags.AddTo(cmd.PersistentFlags())
+	return cmd
+}
+
+func (f *ServeFlags) AddTo(flags *pflag.FlagSet) {
+	flags.AddFlagSet(f.Kubernetes)
+	flags.AddFlagSet(f.Drainer)
+	flags.AddFlagSet(f.AWS)
+}
+
+func (o *ServeOptions) Parse(cmd *cobra.Command) error {
+	settings.Bind(cmd.Flags()) // needs to be run inside the command and before any viper usage for flags to be visible
+
+	glog.V(4).Infof("All keys: %+v", viper.AllKeys())
+	glog.V(2).Infof("All settings: %+v", viper.AllSettings())
+	if glog.V(4) {
+		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+			glog.Infof("'%s' -> flag: '%+v' | setting: '%+v'", flag.Name, flag.Value, viper.Get(flag.Name))
+		})
+	}
+	glog.V(1).Infof("Settings: %+v", *o)
+
+	if err := settings.Parse(o.Kubernetes); err != nil {
+		return err
+	}
+	if err := settings.Parse(o.Drainer); err != nil {
+		return err
+	}
+	if err := settings.Parse(o.AWS); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetNodeInformation gets region and instance ID for a given node from Kubernetes API

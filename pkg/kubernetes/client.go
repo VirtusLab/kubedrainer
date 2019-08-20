@@ -7,13 +7,19 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+type Options = genericclioptions.ConfigFlags
+type Client = kubernetes.Clientset
+
 // Client returns a Kubernetes API client using kubeconfig
-func Client(kubeConfigFlags *genericclioptions.ConfigFlags) (*kubernetes.Clientset, error) {
-	clientConfig, err := kubeConfigFlags.ToRESTConfig()
+func New(options *Options) (*Client, error) {
+	clientConfig, err := options.ToRESTConfig()
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	if glog.V(3) {
+	if glog.V(2) {
+		glog.Infof("Context: %s", *options.Context)
+	}
+	if glog.V(4) {
 		glog.Infof("Configured Host: %s", clientConfig.Host)
 		glog.Infof("Configured AuthProvider: %s", clientConfig.AuthProvider)
 		glog.Infof("Configured ExecProvider: %s", clientConfig.ExecProvider)
