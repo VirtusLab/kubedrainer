@@ -89,9 +89,9 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			glog.V(1).Info("No config file found.")
+			glog.V(1).Info("No config file found")
 		} else {
-			glog.Errorf("Config file found, but cannot be read.")
+			glog.Errorf("Config file found, but cannot be read")
 		}
 	} else {
 		glog.Infof("Using config file: '%s'", viper.ConfigFileUsed())
@@ -105,7 +105,7 @@ func addGlogFlags(flags *pflag.FlagSet) {
 	_ = flag.CommandLine.Parse([]string{})
 
 	// set glog defaults
-	_ = flag.Set("v", "2")
+	_ = flag.Set("v", "0")
 	_ = flag.Set("logtostderr", "true")
 	_ = flag.Set("alsologtostderr", "false")
 
@@ -116,7 +116,6 @@ func addGlogFlags(flags *pflag.FlagSet) {
 func drainerFlags(options *drainer.Options) *pflag.FlagSet {
 	var flags = pflag.NewFlagSet("drainer", pflag.ContinueOnError)
 	flags.String("node", options.Node, "Kubernetes node name to drain")
-	flags.Bool("dry-run", options.DryRun, "If true, only print the object that would be sent, without sending it.")
 	flags.Bool("force", options.Force, "Continue even if there are pods not managed by a ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet.")
 	flags.Bool("ignore-daemonsets", options.IgnoreAllDaemonSets, "Ignore DaemonSet-managed pods.")
 	flags.Bool("delete-local-data", options.DeleteLocalData, "Continue even if there are pods using emptyDir (local data that will be deleted when the node is drained).")

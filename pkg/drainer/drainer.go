@@ -33,7 +33,6 @@ type Drainer interface {
 type Options struct {
 	Node                string
 	Force               bool
-	DryRun              bool
 	GracePeriodSeconds  int
 	IgnoreAllDaemonSets bool
 	Timeout             time.Duration
@@ -76,7 +75,7 @@ func New(client kubernetes.Interface, options *Options) Drainer {
 		drainer: &drain.Helper{
 			Client:              client,
 			ErrOut:              errOut,
-			DryRun:              options.DryRun,
+			DryRun:              false,
 			Force:               options.Force,
 			GracePeriodSeconds:  options.GracePeriodSeconds,
 			IgnoreAllDaemonSets: options.IgnoreAllDaemonSets,
@@ -85,6 +84,9 @@ func New(client kubernetes.Interface, options *Options) Drainer {
 			Selector:            options.Selector,
 			PodSelector:         options.PodSelector,
 		},
+		nodes: &node.Node{
+			Client: client,
+		},
 	}
 }
 
@@ -92,13 +94,6 @@ func (o *drainCmdOptions) Drain(nodeName string) error {
 	glog.Infof("Draining node: '%s'", nodeName)
 	if len(nodeName) == 0 {
 		return errors.New("node name cannot be empty")
-	}
-
-	n := node.Node{
-		Client: o.drainer.Client,
-	}
-	if _, err := n.GetNode(nodeName); err != nil {
-		return err
 	}
 
 	o.ToPrinter = func(operation string) (printers.ResourcePrinterFunc, error) {
@@ -118,6 +113,35 @@ func (o *drainCmdOptions) Drain(nodeName string) error {
 		return printer.PrintObj, nil
 	}
 
+	n, err := o.nodes.GetNode(nodeName)
+	if err != nil {
+		return err
+	}
+	c := drain.NewCordonHelper(n)
+
+	// cordon if required
+	if updateRequired := c.UpdateIfRequired(true); !updateRequired {
+		printObj, err := o.ToPrinter("already cordoned")
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		_ = printObj(n, o.Out)
+	} else {
+		err, patchErr := c.PatchOrReplace(o.drainer.Client)
+		if patchErr != nil {
+			return errors.Wrap(patchErr)
+		}
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		printObj, err := o.ToPrinter("cordoned")
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		_ = printObj(n, o.Out)
+	}
+
 	return o.deleteOrEvictPodsSimple(nodeName)
 }
 
@@ -128,6 +152,7 @@ type drainCmdOptions struct {
 	ToPrinter  func(string) (printers.ResourcePrinterFunc, error)
 
 	drainer *drain.Helper
+	nodes   *node.Node
 
 	genericclioptions.IOStreams
 }
