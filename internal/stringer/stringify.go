@@ -5,6 +5,7 @@ import (
 	"reflect"
 )
 
+// Stringify converts a given interface into a human readable string
 func Stringify(v interface{}) string {
 	value := reflect.ValueOf(v)
 	switch value.Kind() {

@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Bind binds given flags to settings
 func Bind(flags *pflag.FlagSet) {
 	flags.VisitAll(func(flag *pflag.Flag) {
 		if err := viper.BindPFlag(flag.Name, flag); err != nil {
@@ -18,6 +19,7 @@ func Bind(flags *pflag.FlagSet) {
 	})
 }
 
+// Parse parses (unmarshals) settings to a given interface
 func Parse(target interface{}) error {
 	err := viper.Unmarshal(target, func(config *mapstructure.DecoderConfig) {
 		config.ErrorUnused = false

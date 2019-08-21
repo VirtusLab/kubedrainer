@@ -7,10 +7,13 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Options is an alias for kubectl "ConfigFlags"
 type Options = genericclioptions.ConfigFlags
+
+// Client is an alias for kubernetes "Clientset"
 type Client = kubernetes.Clientset
 
-// Client returns a Kubernetes API client using kubeconfig
+// New returns a Kubernetes API client using kubeconfig
 func New(options *Options) (*Client, error) {
 	clientConfig, err := options.ToRESTConfig()
 	if err != nil {

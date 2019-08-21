@@ -23,12 +23,14 @@ import (
 	k8s "k8s.io/client-go/kubernetes"
 )
 
+// ServeOptions holds serve command options
 type ServeOptions struct {
 	Kubernetes *kubernetes.Options
 	Drainer    *drainer.Options
 	AWS        *autoscaling.Options
 }
 
+// ServeFlags holds serve command flags
 type ServeFlags struct {
 	Kubernetes *pflag.FlagSet
 	Drainer    *pflag.FlagSet
@@ -154,12 +156,14 @@ func serveCmd() *cobra.Command {
 	return cmd
 }
 
+// AddTo adds the flags to a given flag set
 func (f *ServeFlags) AddTo(flags *pflag.FlagSet) {
 	flags.AddFlagSet(f.Kubernetes)
 	flags.AddFlagSet(f.Drainer)
 	flags.AddFlagSet(f.AWS)
 }
 
+// Parse parses all flags and settings to options
 func (o *ServeOptions) Parse(cmd *cobra.Command) error {
 	settings.Bind(cmd.Flags()) // needs to be run inside the command and before any viper usage for flags to be visible
 

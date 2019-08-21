@@ -16,11 +16,13 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+// DrainOptions holds the drainer options
 type DrainOptions struct {
 	Kubernetes *kubernetes.Options
 	Drainer    *drainer.Options
 }
 
+// DrainFlags holds the drainer flags
 type DrainFlags struct {
 	Kubernetes *pflag.FlagSet
 	Drainer    *pflag.FlagSet
@@ -72,11 +74,13 @@ func drainCmd() *cobra.Command {
 	return cmd
 }
 
+// AddTo adds the flags to the given flag set
 func (f *DrainFlags) AddTo(flags *pflag.FlagSet) {
 	flags.AddFlagSet(f.Kubernetes)
 	flags.AddFlagSet(f.Drainer)
 }
 
+// Parse parses all flags and settings to options
 func (o *DrainOptions) Parse(cmd *cobra.Command) error {
 	settings.Bind(cmd.Flags()) // needs to be run inside the command and before any viper usage for flags to be visible
 
@@ -98,6 +102,7 @@ func (o *DrainOptions) Parse(cmd *cobra.Command) error {
 	return nil
 }
 
+// String implements Stringer
 func (o *DrainOptions) String() string {
 	return stringer.Stringify(o)
 }
