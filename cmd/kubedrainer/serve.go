@@ -19,7 +19,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	k8s "k8s.io/client-go/kubernetes"
 )
 
@@ -40,7 +39,7 @@ type ServeFlags struct {
 // serveCmd represents the serve command
 func serveCmd() *cobra.Command {
 	options := &ServeOptions{
-		Kubernetes: genericclioptions.NewConfigFlags(true),
+		Kubernetes: kubernetes.DefaultOptions(),
 		Drainer: &drainer.Options{
 			GracePeriodSeconds:  -1,
 			Timeout:             60 * time.Second,

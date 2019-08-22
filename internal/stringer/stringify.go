@@ -3,14 +3,42 @@ package stringer
 import (
 	"fmt"
 	"reflect"
+	"strings"
+
+	"github.com/golang/glog"
 )
 
 // Stringify converts a given interface into a human readable string
 func Stringify(v interface{}) string {
-	value := reflect.ValueOf(v)
+	var value reflect.Value
+	switch v := v.(type) {
+	case nil:
+		return "<nil>"
+	case reflect.Value:
+		value = v
+	default:
+		value = reflect.ValueOf(v)
+	}
+
 	switch value.Kind() {
 	case reflect.Ptr:
-		return fmt.Sprintf("%+v", value.Elem())
+		if value.IsNil() {
+			return "<nil>"
+		}
+		return fmt.Sprintf("%+v", Stringify(value.Elem()))
+	case reflect.Struct:
+		values := make([]string, value.NumField())
+		for i := 0; i < value.NumField(); i++ {
+			fieldType := value.Type().Field(i)
+			field := value.Field(i)
+			values[i] = fmt.Sprintf("%s:%s", fieldType.Name, Stringify(field))
+		}
+		return fmt.Sprintf("{%+v}", strings.Join(values, " "))
+	case reflect.Invalid:
+		if glog.V(5) {
+			glog.Infof("invalid value: %s %s %s", reflect.TypeOf(v), reflect.ValueOf(v).Type().Kind(), value.Kind())
+		}
+		return "?"
 	default:
 		return fmt.Sprintf("%+v", v)
 	}

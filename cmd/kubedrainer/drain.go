@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // DrainOptions holds the drainer options
@@ -30,7 +29,7 @@ type DrainFlags struct {
 
 func drainCmd() *cobra.Command {
 	options := &DrainOptions{
-		Kubernetes: genericclioptions.NewConfigFlags(true),
+		Kubernetes: kubernetes.DefaultOptions(),
 		Drainer: &drainer.Options{
 			GracePeriodSeconds:  -1,
 			Timeout:             60 * time.Second,

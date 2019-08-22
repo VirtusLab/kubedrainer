@@ -1,6 +1,8 @@
 package kubernetes
 
 import (
+	"github.com/VirtusLab/kubedrainer/internal/stringer"
+
 	"github.com/VirtusLab/go-extended/pkg/errors"
 	"github.com/golang/glog"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -8,10 +10,19 @@ import (
 )
 
 // Options is an alias for kubectl "ConfigFlags"
-type Options = genericclioptions.ConfigFlags
+type Options struct {
+	*genericclioptions.ConfigFlags
+}
 
 // Client is an alias for kubernetes "Clientset"
 type Client = kubernetes.Clientset
+
+// DefaultOptions creates a default Options instance
+func DefaultOptions() *Options {
+	return &Options{
+		genericclioptions.NewConfigFlags(true),
+	}
+}
 
 // New returns a Kubernetes API client using kubeconfig
 func New(options *Options) (*Client, error) {
@@ -41,4 +52,9 @@ func New(options *Options) (*Client, error) {
 	}
 
 	return client, err
+}
+
+// String implements Stringer
+func (o *Options) String() string {
+	return stringer.Stringify(o)
 }
