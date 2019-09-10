@@ -15,11 +15,15 @@ const (
 
 // SessionConfig returns AWS API client session and config with given region and profile
 func SessionConfig(region, profile string) (*session.Session, *aws.Config, error) {
-	// AWS_DEFAULT_PROFILE environment variable can be also used to set profile
-	config := aws.NewConfig().WithRegion(region)
+	// Environment variables can be also used, see: /vendor/github.com/aws/aws-sdk-go/aws/session/env_config.go
+	config := aws.NewConfig().
+		WithRegion(region).
+		WithCredentialsChainVerboseErrors(true)
+
 	awsSession, err := session.NewSessionWithOptions(session.Options{
-		Profile: profile,
-		Config:  *config,
+		Profile:           profile,
+		Config:            *config,
+		SharedConfigState: session.SharedConfigEnable,
 	})
 
 	return awsSession, config, errors.Wrap(err)
