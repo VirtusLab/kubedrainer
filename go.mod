@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/VirtusLab/go-extended v0.0.10
-	github.com/aws/aws-sdk-go v1.21.8
+	github.com/aws/aws-sdk-go v1.23.18
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
