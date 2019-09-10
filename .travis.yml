@@ -63,4 +63,5 @@ deploy:
 
 cache:
   directories:
+    - $GOPATH/pkg/mod
     - vendor
