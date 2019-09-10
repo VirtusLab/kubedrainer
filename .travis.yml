@@ -25,6 +25,7 @@ script:
   - make status verify
 
 before_deploy:
+  - go mod vendor
   - make status release docker-build docker-images
   - echo "Deploying to GitHub and Quay ..."
 
