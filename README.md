@@ -8,7 +8,8 @@ Kubernetes Node Drainer helps to evict pods from nodes before shutdown.
 [![GoDoc](https://godoc.org/github.com/VirtusLab/kubedrainer?status.svg "GoDoc Documentation")](https://godoc.org/github.com/VirtusLab/kubedrainer)
 
 ## How it works
-A small binary is run as a `DaemonSet` and listens for a trigger (e.g. [AWS ASG Lifecycle Hook](https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroupLifecycle.html)) and uses [Kubernetes Eviction API](https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/#the-eviction-api) to **drain** the node (just like the `kubectl drain` command).
+A small binary run as a `DaemonSet` and listenning for a trigger (e.g. [AWS ASG Lifecycle Hook](https://docs.aws.amazon.com/autoscaling/ec2/userguide/AutoScalingGroupLifecycle.html)).
+When triggered it uses [Kubernetes Eviction API](https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/#the-eviction-api) to **drain** the node (just like the `kubectl drain` command).
 
 ## Supported Triggers
 The code is prepared for multiple providers if there is a community intrest in shuch functionality, but currently supported triggers are:
