@@ -12,7 +12,10 @@ import (
 
 const (
 	// InstanceTerminatingStatus describes EC2 instance termination status
-	InstanceTerminatingStatus = "Terminating:Wait"
+	InstanceTerminatingStatus = "Terminating"
+
+	// InstanceTerminatingWaitStatus describes EC2 instance termination:wait status
+	InstanceTerminatingWaitStatus = "Terminating:Wait"
 
 	// LifecycleActionResultContinue describes ASG instance lifecycle continue result
 	LifecycleActionResultContinue = "CONTINUE"
@@ -98,4 +101,12 @@ func (a *AutoScaling) IsTerminating(status *string) bool {
 		return false
 	}
 	return *status == InstanceTerminatingStatus
+}
+
+// IsTerminatingWait returns true if the provided status is in terminating:wait state
+func (a *AutoScaling) IsTerminatingWait(status *string) bool {
+	if status == nil {
+		return false
+	}
+	return *status == InstanceTerminatingWaitStatus
 }
