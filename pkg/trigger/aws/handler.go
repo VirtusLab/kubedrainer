@@ -17,6 +17,7 @@ type HookHandler struct {
 
 // Loop starts an infinite handler loop
 func (h *HookHandler) Loop(nodeName string) {
+	var drained bool
 	glog.Infof("Running node drainer on node '%s' on instance '%s' in region '%s' and profile '%s'",
 		nodeName, h.AutoScaling.Options.InstanceID, h.AutoScaling.Options.Region, h.AutoScaling.Options.Profile)
 	for {
@@ -29,17 +30,25 @@ func (h *HookHandler) Loop(nodeName string) {
 			continue
 		}
 		glog.Infof("Status of instance '%v' is '%v', autoscaling group is '%v'", h.AutoScaling.Options.InstanceID, *status, *autoScalingGroupName)
-		if !h.AutoScaling.IsTerminating(status) {
+		if !h.AutoScaling.IsTerminating(status) && !h.AutoScaling.IsTerminatingWait(status) {
 			continue
 		}
 
-		err = h.Drainer.Drain(nodeName)
-		if err != nil {
-			glog.Warningf("Not all pods on this host can be evicted, will try again: %s", err)
+		if !drained {
+			err = h.Drainer.Drain(nodeName)
+			if err != nil {
+				glog.Warningf("Not all pods on this host can be evicted, will try again: %s", err)
+				continue
+			}
+			drained = true
+			glog.Info("All evictable pods are gone, waiting to enter Terminating:Wait state")
+		}
+
+		if !h.AutoScaling.IsTerminatingWait(status) {
 			continue
 		}
-		glog.Infof("All evictable pods are gone, notifying AutoScalingGroup that instance '%v' can be shutdown", h.AutoScaling.Options.InstanceID)
 
+		glog.Infof("Notifying AutoScalingGroup that instance '%v' can be shutdown", h.AutoScaling.Options.InstanceID)
 		lifecycleHookName, err := h.AutoScaling.GetLifecycleHookName(autoScalingGroupName)
 		if err != nil {
 			glog.Warningf("Can not get lifecycle hook, will try again: %s", err)
