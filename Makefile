@@ -37,13 +37,13 @@ VERSION_TAG := $(VERSION)-$(GITCOMMIT)
 LATEST_TAG := latest
 
 CTIMEVAR=-X $(PKG)/version.GITCOMMIT=$(GITCOMMIT) -X $(PKG)/version.VERSION=$(VERSION)
-GO_FLAGS=-mod=vendor -ldflags "-w $(CTIMEVAR)"
-GO_FLAGS_STATIC=-mod=vendor -ldflags "-w $(CTIMEVAR) -extldflags -static"
+GO_FLAGS=-ldflags "-w $(CTIMEVAR)"
+GO_FLAGS_STATIC=-ldflags "-w $(CTIMEVAR) -extldflags -static"
 
 # List the GOOS and GOARCH to build
 GOOSARCHES = darwin/amd64 linux/arm linux/arm64 linux/amd64 windows/amd64
 
-PACKAGES = $(shell go list -f '{{.ImportPath}}/' ./... | grep -v vendor)
+PACKAGES = $(shell go list -f '{{.ImportPath}}/' ./...)
 
 ARGS ?= $(EXTRA_ARGS)
 
@@ -64,10 +64,9 @@ init: ## Initializes this Makefile dependencies: dep, golint, staticcheck, check
 	GO111MODULE=off go get -u github.com/jessfraz/junk/sembump
 
 .PHONY: mod
-mod: ## Populates the vendor directory with dependencies
+mod: ## Downloads dependencies and updates go.mod and go.sum
 	@echo "+ $@"
 	go mod tidy
-	go mod vendor
 
 .PHONY: build
 build: $(NAME) ## Builds a dynamic executable or package
@@ -97,7 +96,7 @@ lint: ## Verifies `golint` passes
 .PHONY: goimports
 goimports: ## Verifies `goimports` passes
 	@echo "+ $@"
-	@goimports -l -e $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+	@goimports -l -e $(shell find . -type f -name '*.go')
 
 .PHONY: test
 test: ## Runs the go tests
