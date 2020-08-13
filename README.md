@@ -1,6 +1,6 @@
 # kubedrainer
-[![Version](https://img.shields.io/badge/version-v0.0.7-brightgreen.svg)](https://github.com/VirtusLab/kubedrainer/releases/tag/v0.0.7)
 [![Build Status](https://travis-ci.org/VirtusLab/kubedrainer.svg?branch=master)](https://travis-ci.org/VirtusLab/kubedrainer)
+[![Binary](https://img.shields.io/badge/binary-v0.0.7-brightgreen.svg)](https://github.com/VirtusLab/kubedrainer/releases/tag/v0.0.7)
 [![Container](https://img.shields.io/badge/container-v0.0.7-brightgreen.svg)](https://quay.io/VirtusLab/kubedrainer:v0.0.7)
 [![Go Report Card](https://goreportcard.com/badge/github.com/VirtusLab/kubedrainer)](https://goreportcard.com/report/github.com/VirtusLab/kubedrainer)
 
