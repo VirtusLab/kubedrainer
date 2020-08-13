@@ -13,7 +13,7 @@ env:
     - GO111MODULE=on
 
 go:
-  - 1.12.x
+  - 1.14.x
 
 matrix:
   fast_finish: true
@@ -63,5 +63,5 @@ deploy:
 
 cache:
   directories:
+    - $HOME/.cache/go-build
     - $GOPATH/pkg/mod
-    - vendor
