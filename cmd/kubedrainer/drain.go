@@ -7,9 +7,9 @@ import (
 	"github.com/VirtusLab/kubedrainer/internal/stringer"
 	"github.com/VirtusLab/kubedrainer/pkg/drainer"
 	"github.com/VirtusLab/kubedrainer/pkg/kubernetes"
+	"github.com/rs/zerolog/log"
 
 	"github.com/VirtusLab/go-extended/pkg/errors"
-	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -48,7 +48,8 @@ func drainCmd() *cobra.Command {
 		Short: "Drain a node",
 		Long:  `Drain a node by cordoning and pod eviction`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			glog.Info("Running locally")
+			setupLogging()
+			log.Info().Msg("Running locally")
 
 			if err := options.Parse(cmd); err != nil {
 				return err
@@ -83,14 +84,14 @@ func (f *DrainFlags) AddTo(flags *pflag.FlagSet) {
 func (o *DrainOptions) Parse(cmd *cobra.Command) error {
 	settings.Bind(cmd.Flags()) // needs to be run inside the command and before any viper usage for flags to be visible
 
-	glog.V(4).Infof("All keys: %+v", viper.AllKeys())
-	glog.V(2).Infof("All settings: %+v", viper.AllSettings())
-	if glog.V(4) {
+	if debug {
+		log.Debug().Msgf("All keys: %+v", viper.AllKeys())
+		log.Debug().Msgf("All settings: %+v", viper.AllSettings())
 		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-			glog.Infof("'%s' -> flag: '%+v' | setting: '%+v'", flag.Name, flag.Value, viper.Get(flag.Name))
+			log.Debug().Msgf("'%s' -> flag: '%+v' | setting: '%+v'", flag.Name, flag.Value, viper.Get(flag.Name))
 		})
+		log.Debug().Msgf("Settings: %+v", *o)
 	}
-	glog.V(1).Infof("Settings: %+v", *o)
 
 	if err := settings.Parse(o.Kubernetes); err != nil {
 		return err

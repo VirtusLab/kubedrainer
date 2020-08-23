@@ -9,9 +9,9 @@ import (
 
 	"github.com/VirtusLab/kubedrainer/internal/stringer"
 	"github.com/VirtusLab/kubedrainer/pkg/kubernetes/node"
+	"github.com/rs/zerolog/log"
 
 	"github.com/VirtusLab/go-extended/pkg/errors"
-	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,19 +45,19 @@ func (o *Options) String() string {
 	return stringer.Stringify(o)
 }
 
-// ErrWriter allows for Glog usage inside kubectl drainer implementation
+// ErrWriter allows for log usage inside kubectl drainer implementation
 type ErrWriter struct{}
 
-// OutWriter allows for Glog usage inside kubectl drainer implementation
+// OutWriter allows for log usage inside kubectl drainer implementation
 type OutWriter struct{}
 
 func (ErrWriter) Write(p []byte) (n int, err error) {
-	glog.Error(string(p))
+	log.Error().Msg(string(p))
 	return len(p), nil
 }
 
 func (OutWriter) Write(p []byte) (n int, err error) {
-	glog.Info(string(p))
+	log.Info().Msg(string(p))
 	return len(p), nil
 }
 
@@ -91,7 +91,7 @@ func New(client kubernetes.Interface, options *Options) Drainer {
 }
 
 func (o *drainCmdOptions) Drain(nodeName string) error {
-	glog.Infof("Draining node: '%s'", nodeName)
+	log.Info().Msgf("Draining node: '%s'", nodeName)
 	if len(nodeName) == 0 {
 		return errors.New("node name cannot be empty")
 	}
