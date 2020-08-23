@@ -5,7 +5,7 @@ import (
 
 	"github.com/VirtusLab/go-extended/pkg/errors"
 	"github.com/VirtusLab/go-extended/pkg/matcher"
-	"github.com/golang/glog"
+	"github.com/rs/zerolog/log"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -31,7 +31,7 @@ func (n *Node) GetNode(nodeName string) (*corev1.Node, error) {
 	}
 	for _, n := range nodes.Items {
 		if n.Name == nodeName {
-			glog.V(1).Infof("Found node: '%s'", nodeName)
+			log.Debug().Msgf("Found node: '%s'", nodeName)
 			return &n, nil
 		}
 	}

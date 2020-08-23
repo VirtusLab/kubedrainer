@@ -1,16 +1,16 @@
 package main
 
 import (
-	"flag"
 	"reflect"
 
 	"github.com/VirtusLab/kubedrainer/internal/version"
 	"github.com/VirtusLab/kubedrainer/pkg/drainer"
 	"github.com/VirtusLab/kubedrainer/pkg/kubernetes"
 	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws/autoscaling"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/golang/glog"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -19,6 +19,7 @@ import (
 
 var appName = "kubedrainer"
 var cfgFile string
+var debug bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -29,29 +30,26 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	// initialization actions
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
 	cobra.OnInitialize(
 		initConfig,
 	)
 
-	// add global flags
-	addGlogFlags(pflag.CommandLine)
-
 	rootFlags := rootCmd.PersistentFlags()
 	rootFlags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.kubedrainer.yaml)")
+	rootFlags.BoolVarP(&debug, "debug", "d", false, "sets log level to debug")
 
 	rootCmd.AddCommand(drainCmd())
 	rootCmd.AddCommand(serveCmd())
 }
 
 func main() {
-	// make sure we always get logs
-	defer glog.Flush()
-
 	// handle config auto-reload
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		// TODO
-		glog.Warning("Config auto reload not implemented!")
+		log.Warn().Msg("Config auto reload not implemented!")
 	})
 
 	// Adds all child commands to the root command and sets flags appropriately.
@@ -62,13 +60,18 @@ func main() {
 }
 
 func exit(err error) {
-	glog.V(1).Infof("Stack trace (%s): %+v", reflect.TypeOf(err), err)
-	glog.Exitln(err)
+	log.Debug().Msgf("Stack trace (%s): %+v", reflect.TypeOf(err), err)
+	log.Fatal().Msgf("%v", err)
+}
+
+func setupLogging() {
+	if debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	glog.V(3).Info("initConfig")
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -76,7 +79,7 @@ func initConfig() {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			glog.Errorln(err)
+			log.Error().Msgf("%v", err)
 		}
 
 		// Search config in home directory with name ".kubedrainer" (without extension).
@@ -89,28 +92,14 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			glog.V(1).Info("No config file found")
+			log.Warn().Msg("No config file found")
 		} else {
-			glog.Errorf("Config file found, but cannot be read")
+			log.Error().Msg("Config file found, but cannot be read")
 		}
 	} else {
-		glog.Infof("Using config file: '%s'", viper.ConfigFileUsed())
+		log.Info().Msgf("Using config file: '%s'", viper.ConfigFileUsed())
 		viper.WatchConfig()
 	}
-}
-
-func addGlogFlags(flags *pflag.FlagSet) {
-	// the following line exists to make glog happy, for more information
-	// see: https://github.com/kubernetes/kubernetes/issues/17162#issuecomment-225596212
-	_ = flag.CommandLine.Parse([]string{})
-
-	// set glog defaults
-	_ = flag.Set("v", "0")
-	_ = flag.Set("logtostderr", "true")
-	_ = flag.Set("alsologtostderr", "false")
-
-	// add glog flags to cobra
-	flags.AddGoFlag(flag.CommandLine.Lookup("v"))
 }
 
 func drainerFlags(options *drainer.Options) *pflag.FlagSet {

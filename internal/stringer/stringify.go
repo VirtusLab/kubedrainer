@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/golang/glog"
+	"github.com/rs/zerolog/log"
 )
 
 // Stringify converts a given interface into a human readable string
@@ -35,9 +35,7 @@ func Stringify(v interface{}) string {
 		}
 		return fmt.Sprintf("{%+v}", strings.Join(values, " "))
 	case reflect.Invalid:
-		if glog.V(5) {
-			glog.Infof("invalid value: %s %s %s", reflect.TypeOf(v), reflect.ValueOf(v).Type().Kind(), value.Kind())
-		}
+		log.Debug().Msgf("invalid value: %s %s %s", reflect.TypeOf(v), reflect.ValueOf(v).Type().Kind(), value.Kind())
 		return "?"
 	default:
 		return fmt.Sprintf("%+v", v)

@@ -5,8 +5,7 @@ import (
 
 	"github.com/VirtusLab/kubedrainer/pkg/drainer"
 	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws/autoscaling"
-
-	"github.com/golang/glog"
+	"github.com/rs/zerolog/log"
 )
 
 // HookHandler implements a drainer trigger for AWS ASG instance lifecycle hook
@@ -18,18 +17,18 @@ type HookHandler struct {
 // Loop starts an infinite handler loop
 func (h *HookHandler) Loop(nodeName string) {
 	var drained bool
-	glog.Infof("Running node drainer on node '%s' on instance '%s' in region '%s' and profile '%s'",
+	log.Info().Msgf("Running node drainer on node '%s' on instance '%s' in region '%s' and profile '%s'",
 		nodeName, h.AutoScaling.Options.InstanceID, h.AutoScaling.Options.Region, h.AutoScaling.Options.Profile)
 	for {
-		glog.Infof("Sleeping %s seconds", h.AutoScaling.Options.LoopSleepTime)
+		log.Info().Msgf("Sleeping %s seconds", h.AutoScaling.Options.LoopSleepTime)
 		time.Sleep(h.AutoScaling.Options.LoopSleepTime)
 
 		status, autoScalingGroupName, err := h.AutoScaling.GetInstanceStatusAndAutoScalingGroupName(&h.AutoScaling.Options.InstanceID)
 		if err != nil {
-			glog.Warningf("Can not get instance status and auto scaling group name, will try again: %s", err)
+			log.Warn().Msgf("Can not get instance status and auto scaling group name, will try again: %s", err)
 			continue
 		}
-		glog.Infof("Status of instance '%v' is '%v', autoscaling group is '%v'", h.AutoScaling.Options.InstanceID, *status, *autoScalingGroupName)
+		log.Info().Msgf("Status of instance '%v' is '%v', autoscaling group is '%v'", h.AutoScaling.Options.InstanceID, *status, *autoScalingGroupName)
 		if !h.AutoScaling.IsTerminating(status) && !h.AutoScaling.IsTerminatingWait(status) {
 			continue
 		}
@@ -37,36 +36,36 @@ func (h *HookHandler) Loop(nodeName string) {
 		if !drained {
 			err = h.Drainer.Drain(nodeName)
 			if err != nil {
-				glog.Warningf("Not all pods on this host can be evicted, will try again: %s", err)
+				log.Warn().Msgf("Not all pods on this host can be evicted, will try again: %s", err)
 				continue
 			}
 			drained = true
-			glog.Info("All evictable pods are gone, waiting to enter Terminating:Wait state")
+			log.Warn().Msg("All evictable pods are gone, waiting to enter Terminating:Wait state")
 		}
 
 		if !h.AutoScaling.IsTerminatingWait(status) {
 			continue
 		}
 
-		glog.Infof("Notifying AutoScalingGroup that instance '%v' can be shutdown", h.AutoScaling.Options.InstanceID)
+		log.Info().Msgf("Notifying AutoScalingGroup that instance '%v' can be shutdown", h.AutoScaling.Options.InstanceID)
 		lifecycleHookName, err := h.AutoScaling.GetLifecycleHookName(autoScalingGroupName)
 		if err != nil {
-			glog.Warningf("Can not get lifecycle hook, will try again: %s", err)
+			log.Warn().Msgf("Can not get lifecycle hook, will try again: %s", err)
 			continue
 		}
 
-		glog.Infof("Sending notification to auto scaling group '%v' and lifecycle hook '%v'", *autoScalingGroupName, *lifecycleHookName)
+		log.Info().Msgf("Sending notification to auto scaling group '%v' and lifecycle hook '%v'", *autoScalingGroupName, *lifecycleHookName)
 		err = h.AutoScaling.SendNotification(&h.AutoScaling.Options.InstanceID, autoScalingGroupName, lifecycleHookName)
 		if err != nil {
-			glog.Warningf("Can not send notification, will try again: %s", err)
+			log.Warn().Msgf("Can not send notification, will try again: %s", err)
 			continue
 		}
 
 		if h.AutoScaling.Options.ForceLoopBreak {
-			glog.Warning("Reconciliation loop force-brake (normal only in tests)")
+			log.Warn().Msg("Reconciliation loop force-brake (normal only in tests)")
 			break
 		}
-		glog.Infof("Sleeping %s, expecting that instance will be shut down in this time", h.AutoScaling.Options.ShutdownSleep)
+		log.Info().Msgf("Sleeping %s, expecting that instance will be shut down in this time", h.AutoScaling.Options.ShutdownSleep)
 		time.Sleep(h.AutoScaling.Options.ShutdownSleep)
 	}
 }

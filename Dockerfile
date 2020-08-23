@@ -29,4 +29,3 @@ COPY --from=builder /user/group /user/passwd /etc/
 USER nobody:nobody
 
 ENTRYPOINT ["kubedrainer", "serve"]
-CMD ["-v1"]

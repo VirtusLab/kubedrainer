@@ -10,12 +10,12 @@ import (
 	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws"
 	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws/autoscaling"
 	"github.com/VirtusLab/kubedrainer/pkg/trigger/aws/metadata"
+	"github.com/rs/zerolog/log"
 
 	"github.com/VirtusLab/go-extended/pkg/errors"
 	"github.com/VirtusLab/go-extended/pkg/matcher"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -63,7 +63,8 @@ func serveCmd() *cobra.Command {
 		Short: "Run node drainer as server",
 		Long:  `Run node drainer as server with the provided configuration`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			glog.Info("Running as server")
+			setupLogging()
+			log.Info().Msg("Running as server")
 
 			if err := options.Parse(cmd); err != nil {
 				return err
@@ -81,7 +82,7 @@ func serveCmd() *cobra.Command {
 
 			// get information from Kubernetes API if necessary
 			if len(options.AWS.Region) == 0 && len(options.AWS.InstanceID) == 0 {
-				glog.V(1).Info("Getting node information")
+				log.Debug().Msg("Getting node information")
 				region, instanceID, err := GetNodeInformation(options.Drainer.Node, kubernetesClient)
 				if err != nil {
 					return err
@@ -89,20 +90,20 @@ func serveCmd() *cobra.Command {
 				if len(options.AWS.InstanceID) == 0 {
 					options.AWS.InstanceID = instanceID
 				} else {
-					glog.V(1).Infof("Ignoring instance ID from node info '%s', using current: '%s'",
+					log.Debug().Msgf("Ignoring instance ID from node info '%s', using current: '%s'",
 						instanceID, options.AWS.InstanceID)
 				}
 				if len(options.AWS.Region) == 0 {
 					options.AWS.Region = region
 				} else {
-					glog.V(1).Infof("Ignoring region from node info '%s', using current: '%s'",
+					log.Debug().Msgf("Ignoring region from node info '%s', using current: '%s'",
 						instanceID, options.AWS.Region)
 				}
 			}
 
 			// get information from AWS API if necessary
 			if len(options.AWS.Region) == 0 && len(options.AWS.InstanceID) == 0 {
-				glog.V(1).Info("Getting EC2 metadata")
+				log.Debug().Msg("Getting EC2 metadata")
 				region, instanceID, err := GetMetadata(awsSession)
 				if err != nil {
 					return err
@@ -110,19 +111,19 @@ func serveCmd() *cobra.Command {
 				if len(options.AWS.InstanceID) == 0 {
 					options.AWS.InstanceID = instanceID
 				} else {
-					glog.V(1).Infof("Ignoring instance ID from metadata '%s', using current: '%s'",
+					log.Debug().Msgf("Ignoring instance ID from metadata '%s', using current: '%s'",
 						instanceID, options.AWS.InstanceID)
 				}
 				if len(options.AWS.Region) == 0 {
 					options.AWS.Region = region
 				} else {
-					glog.V(1).Infof("Ignoring region from metadata '%s', using current: '%s'",
+					log.Debug().Msgf("Ignoring region from metadata '%s', using current: '%s'",
 						instanceID, options.AWS.Region)
 				}
 			}
 
 			if len(options.AWS.Profile) == 0 {
-				glog.V(1).Infof("Using default AWS API credentials profile")
+				log.Debug().Msgf("Using default AWS API credentials profile")
 				options.AWS.Profile = aws.DefaultProfile
 			}
 
@@ -166,15 +167,14 @@ func (f *ServeFlags) AddTo(flags *pflag.FlagSet) {
 func (o *ServeOptions) Parse(cmd *cobra.Command) error {
 	settings.Bind(cmd.Flags()) // needs to be run inside the command and before any viper usage for flags to be visible
 
-	glog.V(4).Infof("All keys: %+v", viper.AllKeys())
-	glog.V(2).Infof("All settings: %+v", viper.AllSettings())
-	if glog.V(4) {
+	if debug {
+		log.Debug().Msgf("All keys: %+v", viper.AllKeys())
+		log.Debug().Msgf("All settings: %+v", viper.AllSettings())
 		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-			glog.Infof("'%s' -> flag: '%+v' | setting: '%+v'", flag.Name, flag.Value, viper.Get(flag.Name))
+			log.Debug().Msgf("'%s' -> flag: '%+v' | setting: '%+v'", flag.Name, flag.Value, viper.Get(flag.Name))
 		})
+		log.Debug().Msgf("Settings: %+v", *o)
 	}
-	glog.V(1).Infof("Settings: %+v", *o)
-
 	if err := settings.Parse(o.Kubernetes); err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func GetMetadata(awsSession *session.Session) (string, string, error) {
 	case nil: // nothing
 	case awserr.Error:
 		if err.Code() == "EC2MetadataRequestError" {
-			glog.Warning("No EC2 metadata available")
+			log.Warn().Msg("No EC2 metadata available")
 		} else {
 			return "", "", errors.Wrap(err)
 		}
