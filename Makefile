@@ -24,6 +24,7 @@ BUILDDIR := ${PREFIX}/cross
 # Add to compile time flags
 VERSION := $(shell cat VERSION.txt)
 GITCOMMIT := $(shell git rev-parse --short HEAD)
+GITBRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 GITUNTRACKEDCHANGES := $(shell git status --porcelain --untracked-files=no)
 GITIGNOREDBUTTRACKEDCHANGES := $(shell git ls-files -i --exclude-standard)
 ifneq ($(GITUNTRACKEDCHANGES),)
@@ -54,7 +55,7 @@ all: clean mod verify build docker-build ## Ensure deps, test, verify, docker bu
 	@echo "+ $@"
 
 .PHONY: init
-init: ## Initializes this Makefile dependencies: dep, golint, staticcheck, checkmake
+init: ## Initializes this Makefile dependencies
 	@echo "+ $@"
 	@# https://github.com/golang/go/issues/32502
 	GO111MODULE=off go get -u golang.org/x/lint/golint
@@ -113,29 +114,15 @@ staticcheck: ## Verifies `staticcheck` passes
 	@echo "+ $@"
 	@staticcheck $(PACKAGES)
 
-.PHONY: verify
-verify: fmt lint vet staticcheck goimports test ## Runs a fmt, lint, vet, staticcheck, goimports and test
-
-.PHONY: cover
-cover: ## Runs go test with coverage
-	@echo "" > coverage.txt
-	@for d in $(PACKAGES); do \
-		RUNNING_TESTS=1 go test -race -coverprofile=profile.out -covermode=atomic "$$d"; \
-		if [ -f profile.out ]; then \
-			cat profile.out >> coverage.txt; \
-			rm profile.out; \
-		fi; \
-	done;
-
 .PHONY: install
 install: ## Installs the executable
 	@echo "+ $@"
-	go install -tags "$(BUILDTAGS)" ${GO_FLAGS} $(BUILD_PATH)
+	@go install -tags "$(BUILDTAGS)" ${GO_FLAGS} $(BUILD_PATH)
 
 .PHONY: run
 run: ## Run the executable, you can use EXTRA_ARGS
 	@echo "+ $@"
-	go run -tags "$(BUILDTAGS)" ${GO_FLAGS} $(BUILD_PATH)/main.go $(ARGS)
+	@go run -tags "$(BUILDTAGS)" ${GO_FLAGS} $(BUILD_PATH)/main.go $(ARGS)
 
 define buildrelease
 GOOS=$(1) GOARCH=$(2) CGO_ENABLED=0 go build \
@@ -151,13 +138,33 @@ release: $(wildcard *.go) $(wildcard */*.go) VERSION.txt ## Builds the cross-com
 	@echo "+ $@"
 	$(foreach GOOSARCH,$(GOOSARCHES), $(call buildrelease,$(subst /,,$(dir $(GOOSARCH))),$(notdir $(GOOSARCH))))
 
+.PHONY: verify
+verify: fmt lint vet staticcheck goimports test ## Runs a fmt, lint, vet, staticcheck, goimports and test
+
+.PHONY: cover
+cover: ## Runs go test with coverage
+	@echo "" > coverage.txt
+	@for d in $(PACKAGES); do \
+		RUNNING_TESTS=1 go test -race -coverprofile=profile.out -covermode=atomic "$$d"; \
+		if [ -f profile.out ]; then \
+			cat profile.out >> coverage.txt; \
+			rm profile.out; \
+		fi; \
+	done;
+
 .PHONY: clean
 clean: ## Cleanup any build binaries or packages
 	@echo "+ $@"
+	go clean
 	$(RM) $(NAME) || echo "Couldn't delete, not there."
 	$(RM) test$(NAME) || echo "Couldn't delete, not there."
 	$(RM) -r $(BUILDDIR) || echo "Couldn't delete, not there."
 	$(RM) coverage.txt || echo "Couldn't delete, not there."
+
+.PHONY: spring-clean
+spring-clean: ## Cleanup git ignored files (interactive)
+	@echo "+ $@"
+	git clean -Xdi
 
 .PHONY: docker-build
 docker-build: ## Build the container
@@ -220,6 +227,9 @@ ifneq ($(GITIGNOREDBUTTRACKEDCHANGES),)
 	@git ls-files -i --exclude-standard
 	@echo
 endif
+	@echo "Dependencies:"
+	@go list -m all
+	@echo
 
 .PHONY: checkmake
 checkmake: ## Check this Makefile
