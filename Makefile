@@ -228,7 +228,7 @@ ifneq ($(GITIGNOREDBUTTRACKEDCHANGES),)
 	@echo
 endif
 	@echo "Dependencies:"
-	@go list -m all
+	@go list -mod=readonly -m all
 	@echo
 
 .PHONY: checkmake
