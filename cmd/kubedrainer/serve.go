@@ -201,7 +201,7 @@ func GetNodeInformation(nodeName string, kubernetesClient k8s.Interface) (string
 	}
 	switch providerName {
 	case "aws":
-		awsNodeIDExpression := `^/(?P<Region>[a-zA-Z0-9-]+)[a-z]/(?P<InstanceID>[a-zA-Z0-9-]+)$`
+		awsNodeIDExpression := `^/?(?P<Region>[a-zA-Z0-9-]+)[a-z]/(?P<InstanceID>[a-zA-Z0-9-]+)$`
 		results, ok := matcher.Must(awsNodeIDExpression).MatchGroups(providerSpecificNodeID)
 		if !ok {
 			return "", "", errors.Errorf("Can't match expression '%s' to '%s'",
