@@ -63,6 +63,27 @@ See an example `DaemonSet` with RBAC [examples/kubernetes/yaml](/examples/kubern
 Feel free to create a GitHub Issue for any questions, bug reports or feature requests, 
 also Pull Requests are welcome, just make sure you discuss any major changes before investing a lot of time.
 
+## Releasing
+Install Makefile dependencies:
+```bash
+make init
+```
+
+Verify the code:
+```bash
+make verify
+```
+
+Bump the version:
+```bash
+make bump-version
+```
+
+Tag the release:
+```bash
+make tag
+```
+
 ## The name
 
 We believe in obvious names. It drains kubernetes nodes. It's `kubedrainer`.
