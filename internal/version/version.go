@@ -3,7 +3,7 @@ package version
 import "fmt"
 
 // VERSION indicates which version of the binary is running.
-var VERSION = "v0.0.8"
+var VERSION = "v0.0.9"
 
 // GITCOMMIT indicates which git hash the binary was built off of
 var GITCOMMIT = ""

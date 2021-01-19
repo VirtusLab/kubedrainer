@@ -100,7 +100,7 @@ spec:
       serviceAccountName: kubedrainer
       containers:
         - name: kubedrainer
-          image: quay.io/virtuslab/kubedrainer:v0.0.8
+          image: quay.io/virtuslab/kubedrainer:v0.0.9
           env:
             - name: KUBEDRAINER_NODE
               valueFrom:
