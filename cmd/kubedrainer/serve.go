@@ -45,6 +45,7 @@ func serveCmd() *cobra.Command {
 			Timeout:             60 * time.Second,
 			DeleteLocalData:     true,
 			IgnoreAllDaemonSets: true,
+			DrainDelay:          0 * time.Second,
 		},
 		AWS: &autoscaling.Options{
 			LoopSleepTime: 10 * time.Second,

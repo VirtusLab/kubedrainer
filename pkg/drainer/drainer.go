@@ -39,6 +39,7 @@ type Options struct {
 	DeleteLocalData     bool
 	Selector            string
 	PodSelector         string
+	DrainDelay          time.Duration `mapstructure:"drain-delay"`
 }
 
 func (o *Options) String() string {
@@ -72,6 +73,7 @@ func New(client kubernetes.Interface, options *Options) Drainer {
 			ErrOut: errOut,
 			Out:    out,
 		},
+		drainDelay: options.DrainDelay,
 		drainer: &drain.Helper{
 			Client:              client,
 			ErrOut:              errOut,
@@ -142,6 +144,9 @@ func (o *drainCmdOptions) Drain(nodeName string) error {
 		_ = printObj(n, o.Out)
 	}
 
+	log.Info().Msgf("Sleep for %v before starting to evict", o.drainDelay.String())
+	time.Sleep(o.drainDelay)
+
 	return o.deleteOrEvictPodsSimple(nodeName)
 }
 
@@ -150,6 +155,8 @@ func (o *drainCmdOptions) Drain(nodeName string) error {
 type drainCmdOptions struct {
 	PrintFlags *genericclioptions.PrintFlags
 	ToPrinter  func(string) (printers.ResourcePrinterFunc, error)
+
+	drainDelay time.Duration
 
 	drainer *drain.Helper
 	nodes   *node.Node

@@ -112,6 +112,7 @@ func drainerFlags(options *drainer.Options) *pflag.FlagSet {
 	flags.Duration("timeout", options.Timeout, "The length of time to wait before giving up, zero means infinite")
 	flags.StringP("selector", "l", options.Selector, "Selector (label query) to filter on")
 	flags.StringP("pod-selector", "", options.PodSelector, "Label selector to filter pods on the node")
+	flags.String("drain-delay", options.DrainDelay.String(), "For how long to wait before draining a node")
 	return flags
 }
 
