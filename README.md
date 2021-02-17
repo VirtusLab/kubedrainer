@@ -1,7 +1,7 @@
 # kubedrainer
 [![Build Status](https://travis-ci.org/VirtusLab/kubedrainer.svg?branch=master)](https://travis-ci.org/VirtusLab/kubedrainer)
-[![Binary](https://img.shields.io/badge/binary-v0.0.9-brightgreen.svg)](https://github.com/VirtusLab/kubedrainer/releases/tag/v0.0.9)
-[![Container](https://img.shields.io/badge/container-v0.0.9-brightgreen.svg)](https://quay.io/VirtusLab/kubedrainer:v0.0.9)
+[![Binary](https://img.shields.io/badge/binary-v0.0.10-brightgreen.svg)](https://github.com/VirtusLab/kubedrainer/releases/tag/v0.0.10)
+[![Container](https://img.shields.io/badge/container-v0.0.10-brightgreen.svg)](https://quay.io/VirtusLab/kubedrainer:v0.0.10)
 [![Go Report Card](https://goreportcard.com/badge/github.com/VirtusLab/kubedrainer)](https://goreportcard.com/report/github.com/VirtusLab/kubedrainer)
 
 Kubernetes Node Drainer helps to evict pods from nodes before shutdown.
