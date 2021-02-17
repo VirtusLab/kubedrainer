@@ -131,5 +131,7 @@ func autoscalingFlags(options *autoscaling.Options) *pflag.FlagSet {
 	flags.String("region", options.Region, "AWS Region to use")
 	flags.String("profile", options.Region, "AWS Profile to use")
 	flags.String("instance-id", options.InstanceID, "AWS EC2 instance ID to terminate")
+	flags.String("loop-sleep-time", options.LoopSleepTime.String(), "For how long to wait at the beginning, before connecting to AWS API")
+	flags.String("shutdown-sleep", options.ShutdownSleep.String(), "For how long to wait at the end, for the AWS EC2 instance to shutdown")
 	return flags
 }
