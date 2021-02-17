@@ -69,6 +69,11 @@ mod: ## Downloads dependencies and updates go.mod and go.sum
 	@echo "+ $@"
 	go mod tidy
 
+.PHONY: upgrade
+upgrade: ## Lists upgradable direct dependencies in go.mod
+	@echo "+ $@"
+	go list -u -f '{{if (and (not (or .Main .Indirect)) .Update)}}{{.Path}}: {{.Version}} -> {{.Update.Version}}{{end}}' -m all 2> /dev/null
+
 .PHONY: build
 build: $(NAME) ## Builds a dynamic executable or package
 	@echo "+ $@"
@@ -122,7 +127,7 @@ install: ## Installs the executable
 .PHONY: run
 run: ## Run the executable, you can use EXTRA_ARGS
 	@echo "+ $@"
-	@go run -tags "$(BUILDTAGS)" ${GO_FLAGS} $(BUILD_PATH)/main.go $(ARGS)
+	@go run -tags "$(BUILDTAGS)" ${GO_FLAGS} $(BUILD_PATH)/** $(ARGS)
 
 define buildrelease
 GOOS=$(1) GOARCH=$(2) CGO_ENABLED=0 go build \
