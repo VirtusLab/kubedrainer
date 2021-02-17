@@ -185,6 +185,7 @@ func (o *ServeOptions) Parse(cmd *cobra.Command) error {
 	if err := settings.Parse(o.AWS); err != nil {
 		return err
 	}
+	log.Debug().Msgf("Parsed settings: %+v", *o)
 	return nil
 }
 

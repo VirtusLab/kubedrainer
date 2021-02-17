@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/VirtusLab/go-extended/pkg/errors"
+	"github.com/VirtusLab/kubedrainer/internal/stringer"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -35,6 +36,10 @@ type Options struct {
 	LoopSleepTime  time.Duration
 	ShutdownSleep  time.Duration
 	ForceLoopBreak bool
+}
+
+func (o *Options) String() string {
+	return stringer.Stringify(o)
 }
 
 // New creates a new AutoScaling
