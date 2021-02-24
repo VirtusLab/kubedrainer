@@ -99,6 +99,7 @@ func (o *DrainOptions) Parse(cmd *cobra.Command) error {
 	if err := settings.Parse(o.Drainer); err != nil {
 		return err
 	}
+	log.Debug().Msgf("Parsed settings: %+v", *o)
 	return nil
 }
 
