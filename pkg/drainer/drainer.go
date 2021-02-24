@@ -33,12 +33,12 @@ type Drainer interface {
 type Options struct {
 	Node                string
 	Force               bool
-	GracePeriodSeconds  int
-	IgnoreAllDaemonSets bool
+	GracePeriodSeconds  int  `mapstructure:"grace-period"`
+	IgnoreAllDaemonSets bool `mapstructure:"ignore-daemonsets"`
 	Timeout             time.Duration
-	DeleteLocalData     bool
+	DeleteLocalData     bool `mapstructure:"delete-local-data"`
 	Selector            string
-	PodSelector         string
+	PodSelector         string        `mapstructure:"pod-selector"`
 	DrainDelay          time.Duration `mapstructure:"drain-delay"`
 }
 
