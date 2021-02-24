@@ -30,11 +30,11 @@ type AutoScaling struct {
 
 // Options for AutoScaling
 type Options struct {
-	InstanceID     string
+	InstanceID     string `mapstructure:"instance-id"`
 	Region         string
 	Profile        string
-	LoopSleepTime  time.Duration
-	ShutdownSleep  time.Duration
+	LoopSleepTime  time.Duration `mapstructure:"loop-sleep-time"`
+	ShutdownSleep  time.Duration `mapstructure:"shutdown-sleep"`
 	ForceLoopBreak bool
 }
 
